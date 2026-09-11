@@ -53,6 +53,8 @@ function copyDtsFiles(dir: string): void {
 export default defineConfig({
 	build: {
 		emptyOutDir: true,
+		minify: false,
+		sourcemap: true,
 
 		lib: {
 			// @zh 单入口：无框架纯 TS 引擎，产物 0 运行时依赖
@@ -72,11 +74,6 @@ export default defineConfig({
 		},
 		rolldownOptions: {
 			output: {
-				minify: {
-					compress: {
-						dropConsole: true,
-					},
-				},
 				postBanner: banner,
 			},
 		},
