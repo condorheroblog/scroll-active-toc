@@ -9,6 +9,8 @@
 [![bundle][bundle-src]][bundle-href]
 [![License][license-src]][license-href]
 
+Live Demo: https://condorheroblog.github.io/scroll-active-toc/
+
 > A framework-agnostic scroll-spy engine that tracks the currently active section while scrolling. Ideal for highlighting table-of-contents and sidebar links from vanilla JS, React, Vue, Solid, jQuery, or any other environment.
 
 **English** | [中文](https://github.com/condorheroblog/scroll-active-toc/blob/main/README.zh-CN.md)

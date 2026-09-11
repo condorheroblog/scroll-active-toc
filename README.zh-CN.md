@@ -9,6 +9,8 @@
 [![bundle][bundle-src]][bundle-href]
 [![License][license-src]][license-href]
 
+在线演示: https://condorheroblog.github.io/scroll-active-toc/
+
 > 一个与框架无关的 scroll-spy 引擎，在滚动时追踪当前活跃的章节。非常适合用于高亮目录（Table of Contents）和侧边栏链接，可在原生 JS、React、Vue、Solid、jQuery 或任何其他环境中使用。
 
 [English](https://github.com/condorheroblog/scroll-active-toc/blob/main/README.md) | **中文**
