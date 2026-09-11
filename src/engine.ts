@@ -180,7 +180,7 @@ export function createActiveScroll(
 		if (!rootEl)
 			return false;
 
-		const { isStart, isEnd } = getEdges(opts.direction, rootEl, isWindowRoot);
+		const { isStart, isEnd } = getEdges(opts.direction, rootEl);
 
 		if (first === true && isStart) {
 			setActiveEl(cache.els[0] || null);

@@ -479,7 +479,10 @@ function scrollInside(rootEl, targetEl, axis) {
 
 function updateProgress() {
 	const doc = document.documentElement;
-	const max = doc.scrollHeight - window.innerHeight;
+	// Max scroll distance is scrollHeight - clientHeight. Unlike innerHeight,
+	// clientHeight excludes the horizontal scrollbar (~17px); using innerHeight
+	// would leave the progress bar permanently short of 100%.
+	const max = doc.scrollHeight - doc.clientHeight;
 	const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
 	$("#scroll-progress").css("width", `${ratio * 100}%`);
 }

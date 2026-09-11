@@ -173,15 +173,37 @@ describe("resolveRoot", () => {
 		expect(resolveRoot(el)).toEqual({ rootEl: el, isWindowRoot: false });
 	});
 
-	it("falls back to documentElement for null / undefined", () => {
-		expect(resolveRoot(null)).toEqual({ rootEl: document.documentElement, isWindowRoot: true });
-		expect(resolveRoot(undefined)).toEqual({ rootEl: document.documentElement, isWindowRoot: true });
+	it("falls back to document.scrollingElement for null / undefined", () => {
+		// Standards mode: scrollingElement is <html>; the code must not hardcode
+		// documentElement, because in quirks mode scrollingElement is <body>.
+		const windowRoot = (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
+		expect(resolveRoot(null)).toEqual({ rootEl: windowRoot, isWindowRoot: true });
+		expect(resolveRoot(undefined)).toEqual({ rootEl: windowRoot, isWindowRoot: true });
+	});
+
+	it("uses <body> as the window root in quirks mode", () => {
+		// @zh 模拟怪异模式：scrollingElement 变为 <body>，窗口根必须随之变为 body，
+		// 且仍保持 isWindowRoot（位置读 window.scrollY、事件监听 document）。
+		// @en Emulates quirks mode where scrollingElement becomes <body>: the
+		// window root must follow it while staying a window root semantically.
+		Object.defineProperty(document, "scrollingElement", {
+			configurable: true,
+			value: document.body,
+		});
+		try {
+			expect(resolveRoot(null)).toEqual({ rootEl: document.body, isWindowRoot: true });
+			expect(resolveRoot(undefined)).toEqual({ rootEl: document.body, isWindowRoot: true });
+		}
+		finally {
+			Reflect.deleteProperty(document, "scrollingElement");
+		}
 	});
 
 	it("unwraps a getter", () => {
 		const el = document.createElement("div");
 		expect(resolveRoot(() => el)).toEqual({ rootEl: el, isWindowRoot: false });
-		expect(resolveRoot(() => null)).toEqual({ rootEl: document.documentElement, isWindowRoot: true });
+		const windowRoot = (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
+		expect(resolveRoot(() => null)).toEqual({ rootEl: windowRoot, isWindowRoot: true });
 	});
 });
 
@@ -263,6 +285,8 @@ describe("getEdges", () => {
 	afterEach(() => {
 		Object.defineProperty(window, "innerHeight", { configurable: true, value: 0 });
 		Object.defineProperty(window, "innerWidth", { configurable: true, value: 0 });
+		Object.defineProperty(document.documentElement, "clientWidth", { configurable: true, value: 0 });
+		Object.defineProperty(document.documentElement, "clientHeight", { configurable: true, value: 0 });
 	});
 
 	it("detects the vertical start / end for a container root", () => {
@@ -273,27 +297,53 @@ describe("getEdges", () => {
 			scrollTop: { configurable: true, value: 0, writable: true },
 		});
 
-		expect(getEdges("vertical", el, false)).toEqual({ isStart: true, isEnd: false });
+		expect(getEdges("vertical", el)).toEqual({ isStart: true, isEnd: false });
 
 		Object.defineProperty(el, "scrollTop", { configurable: true, value: FIXED_OFFSET * 2 + 1 });
-		expect(getEdges("vertical", el, false).isStart).toBe(false);
+		expect(getEdges("vertical", el).isStart).toBe(false);
 
 		Object.defineProperty(el, "scrollTop", { configurable: true, value: 800 });
-		expect(getEdges("vertical", el, false)).toEqual({ isStart: false, isEnd: true });
+		expect(getEdges("vertical", el)).toEqual({ isStart: false, isEnd: true });
 	});
 
 	it("detects the horizontal start / end for the window root", () => {
 		const el = document.documentElement;
-		Object.defineProperty(window, "innerWidth", { configurable: true, value: 300 });
+		// @zh 让 innerWidth 比 clientWidth 大 17px，模拟 Windows 经典滚动条。
+		// 若代码误用 innerWidth，滚到最右时仍会算出"还差 17px"，isEnd 永远不成立；
+		// 本用例即保证该 bug 不会回归。
+		// @en innerWidth is 17px larger than clientWidth to emulate a classic
+		// Windows scrollbar. If the code used innerWidth, the right edge would
+		// always read as "17px away", so isEnd could never hold — this test
+		// guards against that regression.
+		Object.defineProperty(el, "clientWidth", { configurable: true, value: 300 });
+		Object.defineProperty(window, "innerWidth", { configurable: true, value: 317 });
 		Object.defineProperties(el, {
 			scrollWidth: { configurable: true, value: 900 },
 			scrollLeft: { configurable: true, value: 0, writable: true },
 		});
 
-		expect(getEdges("horizontal", el, true)).toEqual({ isStart: true, isEnd: false });
+		expect(getEdges("horizontal", el)).toEqual({ isStart: true, isEnd: false });
 
 		Object.defineProperty(el, "scrollLeft", { configurable: true, value: 600 });
-		expect(getEdges("horizontal", el, true)).toEqual({ isStart: false, isEnd: true });
+		expect(getEdges("horizontal", el)).toEqual({ isStart: false, isEnd: true });
+	});
+
+	it("detects the vertical start / end for the window root", () => {
+		const el = document.documentElement;
+		// @zh 让 innerHeight 比 clientHeight 大 17px，模拟页面底部有占位的横向滚动条。
+		// @en innerHeight is 17px larger than clientHeight to emulate a horizontal
+		// scrollbar that takes layout space at the bottom.
+		Object.defineProperty(el, "clientHeight", { configurable: true, value: 200 });
+		Object.defineProperty(window, "innerHeight", { configurable: true, value: 217 });
+		Object.defineProperties(el, {
+			scrollHeight: { configurable: true, value: 1000 },
+			scrollTop: { configurable: true, value: 0, writable: true },
+		});
+
+		expect(getEdges("vertical", el)).toEqual({ isStart: true, isEnd: false });
+
+		Object.defineProperty(el, "scrollTop", { configurable: true, value: 800 });
+		expect(getEdges("vertical", el)).toEqual({ isStart: false, isEnd: true });
 	});
 });
 

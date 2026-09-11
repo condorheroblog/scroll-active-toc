@@ -54,16 +54,23 @@ export function resolveTargets(source: TargetsSource | null | undefined): HTMLEl
 
 /**
  * @zh 解析滚动容器输入，返回滚动根元素及是否为窗口根。
- * 非 HTMLElement（null / getter 返回 null）统一回落到 documentElement。
+ * 非 HTMLElement（null / getter 返回 null）统一回落到窗口根
+ * document.scrollingElement：标准模式下是 <html>；页面缺少
+ * <!DOCTYPE html> 的怪异模式下，浏览器把窗口滚动交给 <body>，
+ * 此时 scrollingElement 即 <body>（仍按窗口根语义使用：位置读 window.scrollY、
+ * 事件监听 document）。
  * @en Resolves the scroll-container input, returning the scroll root element
  * and whether it is the window root. Non-HTMLElement values fall back to
- * documentElement.
+ * document.scrollingElement: <html> in standards mode; in quirks mode (page
+ * missing <!DOCTYPE html>) the browser moves viewport scrolling to <body>,
+ * which is what scrollingElement then returns (still treated as the window
+ * root: position via window.scrollY, events on document).
  */
 export function resolveRoot(source: RootSource | undefined): { rootEl: HTMLElement, isWindowRoot: boolean } {
 	const value = typeof source === "function" ? source() : source;
 	if (value instanceof HTMLElement)
 		return { rootEl: value, isWindowRoot: false };
-	return { rootEl: document.documentElement, isWindowRoot: true };
+	return { rootEl: (document.scrollingElement as HTMLElement | null) ?? document.documentElement, isWindowRoot: true };
 }
 
 /**
@@ -171,15 +178,39 @@ export function getSentinel(direction: Direction, isWindowRoot: boolean, rootEl:
  * @en Detects whether the scroll container has reached the start or end
  * boundary.
  */
-export function getEdges(direction: Direction, rootEl: HTMLElement, isWindowRoot: boolean): { isStart: boolean, isEnd: boolean } {
+export function getEdges(direction: Direction, rootEl: HTMLElement): { isStart: boolean, isEnd: boolean } {
 	if (direction === "horizontal") {
-		const clientWidth = isWindowRoot ? window.innerWidth : rootEl.clientWidth;
+		// @zh 视口宽度统一用 rootEl.clientWidth（窗口根的 rootEl 来自
+		// document.scrollingElement，标准模式是 <html>、怪异模式是 <body>，
+		// 两者的 clientWidth 都不含滚动条）。
+		// 原因：浏览器里"最多能滚多远"= scrollWidth - clientWidth，
+		// 判断是否滚到终点必须照这个公式算。
+		// 不能用 window.innerWidth：它包含滚动条宽度（Windows 经典滚动条
+		// 约 17px），用它的话即使已经滚到最右，公式仍算出"还差 17px"，
+		// isEnd 就永远是 false。
+		// @en Viewport width is always rootEl.clientWidth (the window root comes
+		// from document.scrollingElement — <html> in standards mode, <body> in
+		// quirks mode — and both report a clientWidth excluding the scrollbar).
+		// The maximum scroll distance is scrollWidth - clientWidth, so end
+		// detection must use the same value. window.innerWidth includes the
+		// scrollbar width (~17px on Windows): using it leaves a permanent 17px
+		// gap at the right edge, so isEnd can never be true.
+		const clientWidth = rootEl.clientWidth;
 		const isStart = rootEl.scrollLeft <= FIXED_OFFSET * 2;
 		const isEnd = Math.abs(rootEl.scrollWidth - clientWidth - rootEl.scrollLeft) <= 1;
 		return { isStart, isEnd };
 	}
 
-	const clientHeight = isWindowRoot ? window.innerHeight : rootEl.clientHeight;
+	// @zh 纵向同理："最多能滚多远"= scrollHeight - clientHeight，所以视口
+	// 高度统一用 rootEl.clientHeight。当页面出现横向滚动条时，
+	// window.innerHeight 会比 clientHeight 多出一个滚动条的高度（约 17px），
+	// 用它会导致滚到底仍判不到终点。
+	// @en Same vertically: the maximum scroll distance is
+	// scrollHeight - clientHeight, so viewport height is always
+	// rootEl.clientHeight. When a horizontal scrollbar is present,
+	// window.innerHeight exceeds clientHeight by its height (~17px), which
+	// would make the bottom end unreachable in the same way.
+	const clientHeight = rootEl.clientHeight;
 	const isStart = rootEl.scrollTop <= FIXED_OFFSET * 2;
 	const isEnd = Math.abs(rootEl.scrollHeight - clientHeight - rootEl.scrollTop) <= 1;
 	return { isStart, isEnd };
