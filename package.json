@@ -51,7 +51,7 @@
 		"dist/*"
 	],
 	"scripts": {
-		"postinstall": "simple-git-hooks",
+		"prepare": "simple-git-hooks",
 		"prepublishOnly": "npm run build",
 		"build": "rm -rf dist && tsc --noEmit && vite build",
 		"test": "vitest",
