@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+	<title>Scroll Active TOC · Interactive Playground</title>
+	<meta name="description" content="An interactive playground for scroll-active-toc: live table-of-contents highlighting, trigger-line debugger, vertical/horizontal and scroll-container demos, EN/中文 and light/dark themes." />
+	<meta name="author" content="Condor Hero" />
+	<meta name="theme-color" content="#080f12" />
+
+	<!-- Icons -->
+	<link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+	<link rel="apple-touch-icon" href="./icon.svg" />
+
+	<!--
+		Render-blocking stylesheet: linked from the document head instead of
+		imported from main.js so Tailwind/utility styles exist BEFORE the first
+		paint in dev as well as in production (no unstyled flash, no panel pop).
+		Vite compiles /src/style.css in dev and rewrites this to a hashed,
+		extracted bundle on build.
+	-->
+	<link rel="stylesheet" href="/src/style.css" />
+
+	<!--
+		Critical pre-style fallback: even before the external stylesheet above
+		arrives on a slow network, keep the slide-over off-screen and its
+		backdrop hidden. #config-panel.is-open (id+class) outranks this rule
+		once the full stylesheet loads.
+	-->
+	<style>
+		#config-panel { position: fixed; translate: 100% 0; }
+		#config-backdrop.hidden { display: none; }
+	</style>
+
+	<!-- Open Graph: sharing images (cover + logo/icon) -->
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content="scroll-active-toc playground" />
+	<meta property="og:title" content="Scroll Active TOC · Interactive Playground" />
+	<meta property="og:description" content="Framework-agnostic scroll-spy engine — live TOC highlighting, trigger-line debugger and real-time configuration. Built with Vite, jQuery and Tailwind CSS v4." />
+	<meta property="og:url" content="https://condorheroblog.github.io/scroll-active-toc/" />
+	<meta property="og:image" content="https://condorheroblog.github.io/scroll-active-toc/og.svg" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:image:alt" content="scroll-active-toc interactive playground cover" />
+	<meta property="og:image" content="https://condorheroblog.github.io/scroll-active-toc/logo.svg" />
+	<meta property="og:image:width" content="620" />
+	<meta property="og:image:height" content="160" />
+	<meta property="og:image:alt" content="scroll-active-toc logo" />
+	<meta property="og:image" content="https://condorheroblog.github.io/scroll-active-toc/icon.svg" />
+	<meta property="og:image:width" content="64" />
+	<meta property="og:image:height" content="64" />
+	<meta property="og:image:alt" content="scroll-active-toc icon" />
+
+	<!-- Twitter -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content="Scroll Active TOC · Interactive Playground" />
+	<meta name="twitter:description" content="Live TOC highlighting, trigger-line debugger and real-time configuration. Vite + jQuery + Tailwind CSS v4." />
+	<meta name="twitter:image" content="https://condorheroblog.github.io/scroll-active-toc/og.svg" />
+
+	<!-- Bootstrap theme & language before first paint (avoids FOUC) -->
+	<script>
+		(function () {
+			try {
+				var storedTheme = localStorage.getItem("sat-theme");
+				var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+				document.documentElement.classList.toggle("dark", storedTheme ? storedTheme === "dark" : prefersDark);
+
+				var storedLang = localStorage.getItem("sat-lang");
+				document.documentElement.lang = storedLang === "zh" ? "zh" : "en";
+			}
+			catch (err) { /* private mode: fall back to defaults */ }
+		})();
+	</script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased transition-colors duration-300 dark:bg-[#080f12] dark:text-slate-200">
+
+	<!-- ===== Fixed header ===== -->
+	<header class="fixed inset-x-0 top-0 z-50 border-b border-slate-200/70 bg-white/80 backdrop-blur-md dark:border-white/10 dark:bg-[#0b131b]/80">
+		<div class="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
+			<a href="#top" class="flex items-center gap-2.5" aria-label="scroll-active-toc home">
+				<img src="./icon.svg" alt="" class="h-9 w-9" width="36" height="36" />
+				<span class="font-mono text-sm font-bold tracking-tight text-slate-900 dark:text-white sm:text-base">scroll-active-toc</span>
+			</a>
+
+			<div class="ml-auto flex items-center gap-1.5 sm:gap-2">
+				<!-- Language switch -->
+				<button id="lang-toggle" type="button"
+					class="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-600 transition hover:border-emerald-400 hover:text-emerald-600 dark:border-white/10 dark:text-slate-300 dark:hover:border-emerald-500/60 dark:hover:text-emerald-400"
+					aria-label="Switch language">
+					<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="m5 8 6 6" />
+						<path d="m4 14 6-6 2-3" />
+						<path d="M2 5h12" />
+						<path d="M7 2h1" />
+						<path d="m22 22-5-10-5 10" />
+						<path d="M14 18h6" />
+					</svg>
+					<span id="lang-label" class="tabular-nums">EN</span>
+				</button>
+
+				<!-- Theme toggle -->
+				<button id="theme-toggle" type="button"
+					class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-emerald-400 hover:text-emerald-600 dark:border-white/10 dark:text-slate-300 dark:hover:border-emerald-500/60 dark:hover:text-emerald-400"
+					aria-label="Toggle color theme">
+					<svg id="icon-sun" class="hidden h-4.5 w-4.5 dark:block" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<circle cx="12" cy="12" r="4" />
+						<path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" />
+						<path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" />
+					</svg>
+					<svg id="icon-moon" class="block h-4.5 w-4.5 dark:hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+					</svg>
+				</button>
+
+				<!-- GitHub -->
+				<a id="github-link" href="https://github.com/condorheroblog/scroll-active-toc" target="_blank" rel="noopener noreferrer"
+					class="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition hover:border-emerald-400 hover:text-emerald-600 dark:border-white/10 dark:text-slate-200 dark:hover:border-emerald-500/60 dark:hover:text-emerald-400"
+					aria-label="View scroll-active-toc on GitHub">
+					<svg class="h-4.5 w-4.5" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+						<path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .31.2.68.8.56A11.52 11.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/>
+					</svg>
+				</a>
+
+				<!-- Open config panel -->
+				<button id="config-open" type="button"
+					class="flex h-9 items-center gap-1.5 rounded-lg bg-slate-900 px-3 text-xs font-semibold text-white transition hover:bg-emerald-600 dark:bg-emerald-500 dark:text-[#06251a] dark:hover:bg-emerald-400"
+					data-i18n-aria="config_aria" aria-label="Configure">
+					<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+						<circle cx="12" cy="12" r="3" />
+					</svg>
+					<span class="hidden sm:inline" data-i18n="config_button">Configure</span>
+				</button>
+			</div>
+		</div>
+
+		<!-- Scroll progress -->
+		<div class="h-0.5 w-full bg-transparent">
+			<div id="scroll-progress" class="h-full w-0 bg-gradient-to-r from-cyan-400 to-emerald-400 transition-[width] duration-100 ease-out"></div>
+		</div>
+	</header>
+
+	<span id="top" class="sr-only">Top</span>
+
+	<!-- ===== Hero ===== -->
+	<section class="relative overflow-hidden pt-16">
+		<div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+			<div class="absolute -top-24 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-emerald-400/15 blur-3xl dark:bg-emerald-500/10"></div>
+		</div>
+		<div class="mx-auto max-w-7xl px-4 pb-14 pt-16 text-center sm:px-6 sm:pt-20">
+			<span class="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300" data-i18n="hero_eyebrow">Framework-agnostic scroll-spy engine</span>
+			<h1 class="mx-auto mt-6 max-w-3xl text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
+				<span data-i18n="hero_title_a">Highlight your table of contents</span>
+				<span class="block bg-gradient-to-r from-cyan-500 to-emerald-500 bg-clip-text text-transparent" data-i18n="hero_title_b">while the page scrolls</span>
+			</h1>
+			<p class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-600 dark:text-slate-400 sm:text-lg" data-i18n="hero_subtitle">
+				A zero-dependency TypeScript engine that always reports the correct active section — even with smooth scrolling, click navigation and edge sections. Scroll this page to see it live.
+			</p>
+			<div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+				<a href="#introduction" class="sat-jump rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:bg-emerald-600 dark:bg-emerald-500 dark:text-[#06251a] dark:hover:bg-emerald-400" data-i18n="hero_cta_explore">Explore the demo</a>
+				<button id="hero-config" type="button" class="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-emerald-400 hover:text-emerald-600 dark:border-white/15 dark:text-slate-200 dark:hover:border-emerald-500/60 dark:hover:text-emerald-400" data-i18n="hero_cta_config">Open the config panel</button>
+			</div>
+			<div class="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+				<span class="inline-flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span><span data-i18n="badge_ts">Pure TypeScript</span></span>
+				<span class="inline-flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-cyan-500"></span><span data-i18n="badge_zero">Zero dependencies</span></span>
+				<span class="inline-flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span><span data-i18n="badge_mit">MIT License</span></span>
+				<span class="inline-flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-violet-500"></span><span data-i18n="badge_stack">Vite · jQuery · Tailwind v4</span></span>
+			</div>
+		</div>
+	</section>
+
+	<!-- ===== Mobile TOC chips (lg:hidden) ===== -->
+	<nav id="mobile-toc" class="sticky top-16 z-40 border-b border-slate-200/70 bg-white/85 backdrop-blur-md dark:border-white/10 dark:bg-[#0b131b]/85 lg:hidden" aria-label="Sections">
+		<div id="mobile-toc-track" class="flex gap-2 overflow-x-auto px-4 py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"></div>
+	</nav>
+
+	<!-- ===== Main layout ===== -->
+	<div class="mx-auto max-w-7xl px-4 pb-24 sm:px-6">
+		<div class="lg:grid lg:grid-cols-[minmax(0,1fr)_250px] lg:gap-12">
+
+			<!-- Article content (sections injected) -->
+			<main id="article" class="min-w-0"></main>
+
+			<!-- Desktop sticky TOC -->
+			<aside class="hidden lg:block">
+				<div class="sticky top-24">
+					<p class="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500" data-i18n="toc_heading">On this page</p>
+					<nav id="toc" aria-label="Table of contents"></nav>
+					<div class="mt-6 rounded-xl border border-dashed border-slate-300 p-3 text-xs leading-relaxed text-slate-500 dark:border-white/15 dark:text-slate-400" data-i18n="toc_hint">
+						The highlighted link follows your scroll position. Click any link — the highlight is instant even while smooth scrolling is animating.
+					</div>
+				</div>
+			</aside>
+		</div>
+	</div>
+
+	<!-- ===== Footer ===== -->
+	<footer class="border-t border-slate-200/70 py-10 dark:border-white/10">
+		<div class="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 text-center sm:px-6">
+			<img src="./logo.svg" alt="scroll-active-toc" class="h-9 dark:hidden" />
+			<img src="./logo-dark.svg" alt="scroll-active-toc" class="hidden h-9 dark:block" />
+			<p class="text-sm text-slate-500 dark:text-slate-400" data-i18n="footer_text">Released under the MIT License · Built with Vite, jQuery and Tailwind CSS v4.</p>
+			<a href="https://github.com/condorheroblog/scroll-active-toc" target="_blank" rel="noopener noreferrer"
+				class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 transition hover:text-emerald-600 dark:text-slate-200 dark:hover:text-emerald-400">
+				<svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+					<path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 2.9-.39c.98 0 1.97.13 2.9.39 2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .31.2.68.8.56A11.52 11.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/>
+				</svg>
+				<span data-i18n="footer_github">View on GitHub</span>
+			</a>
+		</div>
+	</footer>
+
+	<!-- ===== Floating config button (mobile) ===== -->
+	<button id="config-fab" type="button"
+		class="fixed bottom-5 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-[#06251a] shadow-xl shadow-emerald-500/30 transition hover:bg-emerald-400 lg:hidden"
+		data-i18n-aria="config_aria" aria-label="Configure">
+		<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+			<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+			<circle cx="12" cy="12" r="3" />
+		</svg>
+	</button>
+
+	<!-- ===== Configuration slide-over ===== -->
+	<div id="config-backdrop" class="fixed inset-0 z-[60] hidden bg-slate-950/50 backdrop-blur-sm"></div>
+	<aside id="config-panel" class="sat-panel fixed inset-y-0 right-0 z-[70] flex w-[340px] max-w-[88vw] flex-col border-l border-slate-200 bg-white shadow-2xl dark:border-white/10 dark:bg-[#0d151e]" aria-label="Configuration panel">
+		<div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-white/10">
+			<div>
+				<h2 class="text-sm font-bold text-slate-900 dark:text-white" data-i18n="config_title">Engine configuration</h2>
+				<p class="text-xs text-slate-500 dark:text-slate-400" data-i18n="config_subtitle">Applied in real time</p>
+			</div>
+			<button id="config-close" type="button" class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 dark:hover:bg-white/10" data-i18n-aria="config_close_aria" aria-label="Close">
+				<svg class="h-4.5 w-4.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+			</button>
+		</div>
+
+		<div class="sat-scroll min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
+
+			<!-- Live snapshot -->
+			<section class="rounded-xl border border-slate-200 bg-slate-50 p-3.5 dark:border-white/10 dark:bg-white/[0.03]">
+				<p class="mb-2 text-xs font-bold uppercase tracking-widest text-slate-400" data-i18n="status_heading">Live snapshot</p>
+				<dl class="space-y-1.5 font-mono text-xs">
+					<div class="flex justify-between gap-2"><dt class="text-slate-500" data-i18n="status_active">activeId</dt><dd id="status-active-id" class="truncate font-semibold text-emerald-600 dark:text-emerald-400">—</dd></div>
+					<div class="flex justify-between gap-2"><dt class="text-slate-500" data-i18n="status_index">activeIndex</dt><dd id="status-active-index" class="font-semibold text-emerald-600 dark:text-emerald-400">-1</dd></div>
+					<div class="flex justify-between gap-2"><dt class="text-slate-500" data-i18n="status_listener">listeners</dt><dd id="status-enabled" class="font-semibold text-slate-700 dark:text-slate-200">—</dd></div>
+				</dl>
+			</section>
+
+			<!-- hash -->
+			<section>
+				<label for="cfg-hash" class="sat-label" data-i18n="cfg_hash">Hash sync</label>
+				<select id="cfg-hash" class="sat-select">
+					<option value="off" data-i18n="hash_off">off</option>
+					<option value="replace" selected data-i18n="hash_replace">replace</option>
+					<option value="push" data-i18n="hash_push">push</option>
+				</select>
+				<p class="sat-help" data-i18n="cfg_hash_help">How the URL hash is synced while scrolling.</p>
+			</section>
+
+			<!-- overlay -->
+			<section>
+				<div class="flex items-center justify-between">
+					<label for="cfg-overlay" class="sat-label mb-0" data-i18n="cfg_overlay">Fixed overlay</label>
+					<span id="cfg-overlay-val" class="font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400">64px</span>
+				</div>
+				<input id="cfg-overlay" type="range" min="0" max="120" step="2" value="64" class="sat-range mt-2 w-full" />
+				<p class="sat-help" data-i18n="cfg_overlay_help">Height of the fixed header overlapping the scroll area (px).</p>
+			</section>
+
+			<!-- offset -->
+			<section class="grid grid-cols-2 gap-3">
+				<div>
+					<div class="flex items-center justify-between">
+						<label for="cfg-offset-start" class="sat-label mb-0" data-i18n="cfg_offset_start">Offset ↑</label>
+						<span id="cfg-offset-start-val" class="font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400">0px</span>
+					</div>
+					<input id="cfg-offset-start" type="range" min="-80" max="160" step="4" value="0" class="sat-range mt-2 w-full" />
+				</div>
+				<div>
+					<div class="flex items-center justify-between">
+						<label for="cfg-offset-end" class="sat-label mb-0" data-i18n="cfg_offset_end">Offset ↓</label>
+						<span id="cfg-offset-end-val" class="font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400">0px</span>
+					</div>
+					<input id="cfg-offset-end" type="range" min="-80" max="160" step="4" value="0" class="sat-range mt-2 w-full" />
+				</div>
+				<p class="sat-help col-span-2" data-i18n="cfg_offset_help">Anticipate or delay detection per scroll direction.</p>
+			</section>
+
+			<!-- edges -->
+			<section class="space-y-3">
+				<div class="rounded-xl border border-slate-200 p-3 dark:border-white/10">
+					<div class="flex items-center justify-between">
+						<label for="cfg-first-force" class="text-xs font-semibold text-slate-700 dark:text-slate-200" data-i18n="cfg_first">First edge · always active</label>
+						<input id="cfg-first-force" type="checkbox" checked class="sat-check" />
+					</div>
+					<div class="mt-2.5 flex items-center gap-2">
+						<input id="cfg-first-distance" type="range" min="0" max="240" step="8" value="80" disabled class="sat-range w-full" />
+						<span id="cfg-first-distance-val" class="w-14 text-right font-mono text-xs text-slate-400">80px</span>
+					</div>
+				</div>
+				<div class="rounded-xl border border-slate-200 p-3 dark:border-white/10">
+					<div class="flex items-center justify-between">
+						<label for="cfg-last-force" class="text-xs font-semibold text-slate-700 dark:text-slate-200" data-i18n="cfg_last">Last edge · always active</label>
+						<input id="cfg-last-force" type="checkbox" checked class="sat-check" />
+					</div>
+					<div class="mt-2.5 flex items-center gap-2">
+						<input id="cfg-last-distance" type="range" min="0" max="240" step="8" value="80" disabled class="sat-range w-full" />
+						<span id="cfg-last-distance-val" class="w-14 text-right font-mono text-xs text-slate-400">80px</span>
+					</div>
+				</div>
+				<p class="sat-help" data-i18n="cfg_edges_help">Forced edges highlight even when the target never crosses the trigger line. A distance allows “no active target”.</p>
+			</section>
+
+			<!-- media query gate -->
+			<section class="flex items-center justify-between rounded-xl border border-slate-200 p-3 dark:border-white/10">
+				<div>
+					<p class="text-xs font-semibold text-slate-700 dark:text-slate-200" data-i18n="cfg_mq">Media-query gate</p>
+					<p class="mt-0.5 font-mono text-[11px] text-slate-400">(min-width: 768px)</p>
+				</div>
+				<input id="cfg-mq" type="checkbox" class="sat-check" />
+			</section>
+
+			<!-- debug overlay -->
+			<section class="flex items-center justify-between rounded-xl border border-slate-200 p-3 dark:border-white/10">
+				<div>
+					<p class="text-xs font-semibold text-slate-700 dark:text-slate-200" data-i18n="cfg_debug">Trigger-line overlay</p>
+					<p class="mt-0.5 text-[11px] text-slate-400" data-i18n="cfg_debug_help">createDebugOverlay()</p>
+				</div>
+				<input id="cfg-debug" type="checkbox" class="sat-check" />
+			</section>
+
+			<button id="cfg-reset" type="button" class="w-full rounded-lg border border-slate-300 py-2 text-xs font-semibold text-slate-600 transition hover:border-emerald-400 hover:text-emerald-600 dark:border-white/15 dark:text-slate-300 dark:hover:border-emerald-500/60 dark:hover:text-emerald-400" data-i18n="cfg_reset">Reset to defaults</button>
+		</div>
+	</aside>
+
+	<script type="module" src="/src/main.js"></script>
+</body>
+</html>

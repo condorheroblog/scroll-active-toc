@@ -1,0 +1,289 @@
+@import "tailwindcss";
+
+/* Enable class-based dark mode with Tailwind CSS v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+	--font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+	--color-brand: #1fa669;
+	--color-brand-cyan: #22d3ee;
+}
+
+/* ===== Base ===== */
+:root {
+	color-scheme: light;
+	--uas-debug-line: #0e7490;
+	--uas-debug-edge: #d97706;
+	--uas-debug-bg: #ffffff;
+	--uas-debug-z-index: 9999;
+}
+
+.dark {
+	color-scheme: dark;
+	--uas-debug-line: #22d3ee;
+	--uas-debug-edge: #f59e0b;
+	--uas-debug-bg: #0d151e;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+}
+
+body {
+	text-rendering: optimizeLegibility;
+}
+
+::selection {
+	background: rgb(34 211 238 / 25%);
+}
+
+/* Sections need clearance under the fixed header when scrolled to */
+.sat-section {
+	scroll-margin-top: 96px;
+}
+
+.sat-scroll {
+	scrollbar-width: thin;
+	scrollbar-color: rgb(100 116 139 / 45%) transparent;
+}
+.sat-scroll::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+.sat-scroll::-webkit-scrollbar-thumb {
+	background: rgb(100 116 139 / 45%);
+	border-radius: 999px;
+}
+
+/* ===== Table of contents links ===== */
+.toc-link {
+	position: relative;
+	display: block;
+	border-left: 2px solid rgb(148 163 184 / 35%);
+	padding: 6px 0 6px 14px;
+	font-size: 13px;
+	line-height: 1.35;
+	color: var(--color-slate-500);
+	transition: color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+.toc-link:hover {
+	color: var(--color-emerald-600);
+	transform: translateX(2px);
+}
+.dark .toc-link:hover {
+	color: var(--color-emerald-400);
+}
+.toc-link.active {
+	border-left-color: var(--color-emerald-500);
+	color: var(--color-emerald-700);
+	font-weight: 600;
+}
+.dark .toc-link.active {
+	border-left-color: var(--color-emerald-400);
+	color: var(--color-emerald-300);
+}
+
+.chip-link {
+	flex: 0 0 auto;
+	white-space: nowrap;
+	border-radius: 999px;
+	border: 1px solid rgb(148 163 184 / 35%);
+	padding: 4px 12px;
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--color-slate-500);
+	transition: all 0.18s ease;
+}
+.chip-link:hover {
+	border-color: var(--color-emerald-400);
+	color: var(--color-emerald-600);
+}
+.chip-link.active {
+	border-color: var(--color-emerald-500);
+	background: rgb(16 185 129 / 12%);
+	color: var(--color-emerald-700);
+	font-weight: 600;
+}
+.dark .chip-link {
+	color: var(--color-slate-400);
+}
+.dark .chip-link:hover {
+	color: var(--color-emerald-400);
+}
+.dark .chip-link.active {
+	border-color: var(--color-emerald-400);
+	background: rgb(16 185 129 / 18%);
+	color: var(--color-emerald-300);
+}
+
+/* Inner-demo TOC variants */
+.mini-link {
+	border-radius: 8px;
+	border: 1px solid rgb(148 163 184 / 30%);
+	padding: 4px 10px;
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--color-slate-500);
+	transition: all 0.18s ease;
+}
+.mini-link:hover {
+	border-color: var(--color-emerald-400);
+	color: var(--color-emerald-600);
+}
+.mini-link.active {
+	border-color: var(--color-emerald-500);
+	background: var(--color-emerald-500);
+	color: white;
+}
+.dark .mini-link {
+	color: var(--color-slate-400);
+}
+.dark .mini-link.active {
+	border-color: var(--color-emerald-400);
+	background: var(--color-emerald-500);
+	color: #06251a;
+}
+
+.dot-link {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 5px 0;
+	font-size: 12.5px;
+	color: var(--color-slate-500);
+	transition: color 0.18s ease;
+}
+.dot-link::before {
+	content: "";
+	width: 8px;
+	height: 8px;
+	border-radius: 999px;
+	background: rgb(148 163 184 / 50%);
+	transition: all 0.18s ease;
+}
+.dot-link:hover {
+	color: var(--color-emerald-600);
+}
+.dot-link.active {
+	color: var(--color-emerald-700);
+	font-weight: 600;
+}
+.dot-link.active::before {
+	background: var(--color-emerald-500);
+	box-shadow: 0 0 0 4px rgb(16 185 129 / 18%);
+}
+.dark .dot-link {
+	color: var(--color-slate-400);
+}
+.dark .dot-link:hover {
+	color: var(--color-emerald-400);
+}
+.dark .dot-link.active {
+	color: var(--color-emerald-300);
+}
+
+/* ===== Form controls ===== */
+.sat-label {
+	display: block;
+	margin-bottom: 6px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--color-slate-700);
+}
+.dark .sat-label {
+	color: var(--color-slate-200);
+}
+
+.sat-help {
+	margin-top: 6px;
+	font-size: 11px;
+	line-height: 1.45;
+	color: var(--color-slate-400);
+}
+
+.sat-select {
+	width: 100%;
+	border-radius: 8px;
+	border: 1px solid rgb(148 163 184 / 45%);
+	background: transparent;
+	padding: 7px 10px;
+	font-size: 12px;
+	font-family: var(--font-mono);
+	color: var(--color-slate-700);
+	outline: none;
+	transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.sat-select:focus {
+	border-color: var(--color-emerald-500);
+	box-shadow: 0 0 0 3px rgb(16 185 129 / 15%);
+}
+.dark .sat-select {
+	border-color: rgb(148 163 184 / 30%);
+	color: var(--color-slate-200);
+}
+.sat-select option {
+	color: #1e293b;
+}
+
+.sat-range {
+	accent-color: #10b981;
+	height: 18px;
+	cursor: pointer;
+}
+.sat-range:disabled {
+	cursor: not-allowed;
+	opacity: 0.35;
+}
+
+.sat-check {
+	width: 18px;
+	height: 18px;
+	accent-color: #10b981;
+	cursor: pointer;
+}
+
+/* ===== Code blocks ===== */
+.sat-pre {
+	margin: 0;
+	overflow-x: auto;
+	border-radius: 12px;
+	border: 1px solid rgb(148 163 184 / 25%);
+	background: #0b131b;
+	padding: 16px 18px;
+	font-family: var(--font-mono);
+	font-size: 12.5px;
+	line-height: 1.7;
+	color: #cbd5e1;
+	tab-size: 2;
+}
+.sat-pre .tok-kw { color: #c084fc; }
+.sat-pre .tok-str { color: #86efac; }
+.sat-pre .tok-fn { color: #7dd3fc; }
+.sat-pre .tok-com { color: #64748b; font-style: italic; }
+.sat-pre .tok-num { color: #fbbf24; }
+
+/* ===== Scroll snap demos ===== */
+.sat-h-scroll {
+	scroll-snap-type: x mandatory;
+	scrollbar-width: thin;
+}
+.sat-h-scroll > * {
+	scroll-snap-align: start;
+}
+
+/* Panel visibility helpers (toggled by jQuery).
+   Tailwind v4 translate utilities use the standalone CSS `translate`
+   property, so the slide animation must use it too (not `transform`). */
+#config-panel {
+	translate: 100% 0;
+	transition: translate 0.3s ease-out;
+}
+#config-panel.is-open {
+	translate: 0 0;
+}

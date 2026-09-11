@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="scroll-active-toc interactive playground">
+	<defs>
+		<linearGradient id="og-bg" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#080f12"/>
+			<stop offset="0.55" stop-color="#0b1620"/>
+			<stop offset="1" stop-color="#0a1410"/>
+		</linearGradient>
+		<linearGradient id="og-g" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#22d3ee"/>
+			<stop offset="1" stop-color="#1fa669"/>
+		</linearGradient>
+		<pattern id="og-grid" width="42" height="42" patternUnits="userSpaceOnUse">
+			<path d="M42 0H0V42" fill="none" stroke="#ffffff" stroke-opacity="0.05" stroke-width="1"/>
+		</pattern>
+	</defs>
+
+	<rect width="1200" height="630" fill="url(#og-bg)"/>
+	<rect width="1200" height="630" fill="url(#og-grid)"/>
+	<circle cx="1020" cy="90" r="320" fill="#1fa669" fill-opacity="0.08"/>
+	<circle cx="120" cy="560" r="240" fill="#22d3ee" fill-opacity="0.07"/>
+
+	<!-- Mark -->
+	<rect x="90" y="86" width="104" height="104" rx="24" fill="#0f1b26" stroke="#263244" stroke-width="2"/>
+	<rect x="118" y="112" width="7" height="52" rx="3.5" fill="#263244"/>
+	<rect x="113" y="131" width="17" height="17" rx="8.5" fill="url(#og-g)"/>
+	<rect x="142" y="114" width="40" height="9" rx="4.5" fill="#3b4a60"/>
+	<rect x="142" y="134" width="40" height="9" rx="4.5" fill="url(#og-g)"/>
+	<rect x="142" y="154" width="26" height="9" rx="4.5" fill="#3b4a60"/>
+
+	<!-- Wordmark -->
+	<text x="218" y="150" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="34" font-weight="700" fill="#e7f5ec">scroll-active-toc</text>
+	<text x="220" y="182" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="17" fill="#7d8da1">Framework-agnostic scroll-spy engine</text>
+
+	<!-- Headline -->
+	<text x="90" y="332" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="76" font-weight="800" fill="#f4f9f6">Interactive</text>
+	<text x="90" y="418" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="76" font-weight="800" fill="url(#og-g)">Playground</text>
+	<text x="92" y="470" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="27" fill="#9fb0c3">Live TOC highlighting · trigger-line debugger · EN/中文 · light/dark</text>
+
+	<!-- Stack chips -->
+	<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="600">
+		<rect x="90" y="512" width="92" height="44" rx="22" fill="#10231a" stroke="#1fa669" stroke-opacity="0.55"/>
+		<text x="136" y="541" text-anchor="middle" fill="#5ee09b">Vite</text>
+		<rect x="196" y="512" width="110" height="44" rx="22" fill="#10231a" stroke="#1fa669" stroke-opacity="0.55"/>
+		<text x="251" y="541" text-anchor="middle" fill="#5ee09b">jQuery</text>
+		<rect x="320" y="512" width="200" height="44" rx="22" fill="#10231a" stroke="#1fa669" stroke-opacity="0.55"/>
+		<text x="420" y="541" text-anchor="middle" fill="#5ee09b">Tailwind CSS v4</text>
+	</g>
+
+	<text x="1110" y="588" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" fill="#5b6b7f">MIT · TypeScript · zero dependencies</text>
+</svg>
