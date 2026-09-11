@@ -66,6 +66,7 @@
 		"@types/node": "^26.4.1",
 		"bumpp": "^12.3.0",
 		"happy-dom": "^20.14.3",
+		"lint-staged": "^17.5.0",
 		"simple-git-hooks": "^2.14.0",
 		"typescript": "^6.0.3",
 		"unplugin-dts": "^1.1.0",
