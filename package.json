@@ -1,7 +1,7 @@
 {
 	"name": "scroll-active-toc",
 	"type": "module",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"private": false,
 	"description": "Framework-agnostic scroll-spy / active TOC link engine. Pure TypeScript, zero dependencies.",
 	"author": {
